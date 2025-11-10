@@ -42,6 +42,11 @@ async function run() {
             res.send(result)
         })
 
+        app.get("/top-Partner", async (req, res) => {
+            const result = await partnerCollection.find().sort({ rating: -1 }).limit(3).toArray()
+            res.send(result)
+        })
+
         app.get("/partner/:id", async (req, res) => {
             const result = await partnerCollection.findOne({ _id: new ObjectId(req.params.id) })
             res.send(result)
