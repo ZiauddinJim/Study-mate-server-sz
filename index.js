@@ -2,8 +2,9 @@
 require('dotenv').config();
 const express = require('express')
 const app = express()
+var cors = require('cors')
 const port = process.env.PORT;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 
 // Middleware
@@ -41,10 +42,14 @@ async function run() {
             res.send(result)
         })
 
+        app.get("/partner/:id", async (req, res) => {
+            const result = await partnerCollection.findOne({ _id: new ObjectId(req.params.id) })
+            res.send(result)
+        })
 
         // post METHOD
         app.post("/partner", async (req, res) => {
-            // console.log(req.body);
+            console.log(req.body);
             const result = await partnerCollection.insertOne(req.body)
             res.send(result)
         })
@@ -52,7 +57,10 @@ async function run() {
         // patch OR put METHOD
 
         // delete METHOD
-
+        app.delete("/partner/:id", async (req, res) => {
+            const result = await partnerCollection.deleteOne({ _id: new ObjectId(req.params.id) })
+            res.send(result)
+        })
 
         // server run check
         await client.db("admin").command({ ping: 1 });
