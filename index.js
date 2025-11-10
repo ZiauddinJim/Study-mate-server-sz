@@ -42,10 +42,31 @@ async function run() {
             res.send(result)
         })
 
+        // Top partner Sort 3 card and rating 
         app.get("/top-Partner", async (req, res) => {
             const result = await partnerCollection.find().sort({ rating: -1 }).limit(3).toArray()
             res.send(result)
         })
+
+        // Sort rating
+        app.get("/rating", async (req, res) => {
+            const result = await partnerCollection.find().sort({ rating: -1 }).toArray()
+            res.send(result)
+        })
+
+        // Sort Experience
+        app.get("/experience", async (req, res) => {
+            const result = await partnerCollection.find().sort({ experienceLevel: -1 }).toArray()
+            res.send(result)
+        })
+
+        // Sort Name
+        app.get("/name", async (req, res) => {
+            const result = await partnerCollection.find().sort({ name: 1 }).toArray()
+            res.send(result)
+        })
+
+       
 
         app.get("/partner/:id", async (req, res) => {
             const result = await partnerCollection.findOne({ _id: new ObjectId(req.params.id) })
