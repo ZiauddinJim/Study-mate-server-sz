@@ -66,7 +66,20 @@ async function run() {
             res.send(result)
         })
 
-       
+        // Search filter name, location, subject, experience
+        app.get("/search", async (req, res) => {
+            const search_text = req.query.search;
+            const result = await partnerCollection.find({
+                $or: [
+                    { name: { $regex: search_text, $options: "i" } },
+                    { subject: { $regex: search_text, $options: "i" } },
+                    { studyMode: { $regex: search_text, $options: "i" } },
+                    { experienceLevel: { $regex: search_text, $options: "i" } },
+                    { location: { $regex: search_text, $options: "i" } },
+                ]
+            }).toArray()
+            res.send(result)
+        })
 
         app.get("/partner/:id", async (req, res) => {
             const result = await partnerCollection.findOne({ _id: new ObjectId(req.params.id) })
