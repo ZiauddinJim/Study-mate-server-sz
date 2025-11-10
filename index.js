@@ -27,6 +27,43 @@ app.get('/', (req, res) => {
 })
 
 
+// MongoDB connection
+async function run() {
+    try {
+        // Connect the client to the server	(optional starting in v4.7)
+        await client.connect();
+        const db = client.db("StudyMate")
+        const partnerCollection = db.collection("partner")
+
+        // get METHOD
+        app.get("/partner", async (req, res) => {
+            const result = await partnerCollection.find().toArray();
+            res.send(result)
+        })
+
+
+        // post METHOD
+        app.post("/partner", async (req, res) => {
+            // console.log(req.body);
+            const result = await partnerCollection.insertOne(req.body)
+            res.send(result)
+        })
+
+        // patch OR put METHOD
+
+        // delete METHOD
+
+
+        // server run check
+        await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    } finally {
+        // Ensures that the client will close when you finish/error
+        // await client.close();
+    }
+}
+run().catch(console.dir);
+
 
 // app published
 app.listen(port, () => {
