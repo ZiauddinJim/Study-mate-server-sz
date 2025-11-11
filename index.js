@@ -5,11 +5,43 @@ const app = express()
 var cors = require('cors')
 const port = process.env.PORT;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const admin = require("firebase-admin");
+
+const serviceAccount = require("./firebase-adminSdk.json");
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
 
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Section: Firebase verify middleware
+const firebaseVerifyToken = async (req, res, next) => {
+    // console.log(req.headers.authorization);
+    // console.log("i am from firebase middleware.");
+    if (!req.headers.authorization) {
+        return res.status(401).send({ message: "unauthorize request!" })
+    }
+    const token = req.headers.authorization.split(" ")[1]
+    // console.log(token);
+    if (!token) {
+        return res.status(401).send({ message: "Token is not authorize!" })
+    }
+    // verify id token
+    try {
+        const tokenInfo = await admin.auth().verifyIdToken(token)
+        req.token_email = tokenInfo.email;
+        console.log("after token validation:", tokenInfo);
+        next()
+    } catch (error) {
+        console.log(error);
+        return res.status(401).send({ message: "Token is not authorize1" })
+    }
+
+}
 
 
 // Connect MongoDB
@@ -122,7 +154,7 @@ async function run() {
             res.send(result)
         })
 
-        app.get("/partner/:id", async (req, res) => {
+        app.get("/partner/:id", firebaseVerifyToken, async (req, res) => {
             const result = await partnerCollection.findOne({ _id: new ObjectId(req.params.id) })
             res.send(result)
         })
