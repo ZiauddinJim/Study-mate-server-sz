@@ -83,10 +83,10 @@ async function run() {
         })
 
         // Sort rating
-        // app.get("/rating", async (req, res) => {
-        //     const result = await partnerCollection.find().sort({ rating: -1 }).toArray()
-        //     res.send(result)
-        // })
+        app.get("/rating", async (req, res) => {
+            const result = await partnerCollection.find().sort({ rating: -1 }).toArray()
+            res.send(result)
+        })
 
 
 
@@ -133,22 +133,22 @@ async function run() {
             res.send(result)
         })
 
-        // // Sort Name
-        // app.get("/name", async (req, res) => {
-        //     const result = await partnerCollection.find().sort({ name: 1 }).toArray()
-        //     res.send(result)
-        // })
+        // Sort Name
+        app.get("/name", async (req, res) => {
+            const result = await partnerCollection.find().sort({ name: 1 }).toArray()
+            res.send(result)
+        })
 
         // Search filter name, location, subject, experience
         app.get("/search", async (req, res) => {
             const search_text = req.query.search;
             const result = await partnerCollection.find({
                 $or: [
-                    // { name: { $regex: search_text, $options: "i" } },
+                    { name: { $regex: search_text, $options: "i" } },
                     { subject: { $regex: search_text, $options: "i" } },
-                    // { studyMode: { $regex: search_text, $options: "i" } },
-                    // { experienceLevel: { $regex: search_text, $options: "i" } },
-                    // { location: { $regex: search_text, $options: "i" } },
+                    { studyMode: { $regex: search_text, $options: "i" } },
+                    { experienceLevel: { $regex: search_text, $options: "i" } },
+                    { location: { $regex: search_text, $options: "i" } },
                 ]
             }).toArray()
             res.send(result)
@@ -199,6 +199,15 @@ async function run() {
             const update = { $inc: { partnerCount: 1 } }
             const partnerCount = await partnerCollection.updateOne(filter, update)
             res.send(partnerCount)
+        })
+
+        // connection partner details update
+        app.patch("/connection/:id", async (req, res) => {
+            const filter = { _id: new ObjectId(req.params.id) }
+            const productUpdate = req.body
+            const update = { $set: productUpdate }
+            const result = await connectionCollection.updateOne(filter, update)
+            res.send(result)
         })
 
         // delete METHOD  Section:
