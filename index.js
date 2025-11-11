@@ -34,7 +34,7 @@ const firebaseVerifyToken = async (req, res, next) => {
     try {
         const tokenInfo = await admin.auth().verifyIdToken(token)
         req.token_email = tokenInfo.email;
-        console.log("after token validation:", tokenInfo);
+        // console.log("after token validation:", tokenInfo);
         next()
     } catch (error) {
         console.log(error);
@@ -174,14 +174,21 @@ async function run() {
 
         // post METHOD  Section:
         app.post("/partner", firebaseVerifyToken, async (req, res) => {
-            console.log(req.body);
+            // console.log(req.body);
             const result = await partnerCollection.insertOne(req.body)
             res.send(result)
         })
 
         app.post("/connection", async (req, res) => {
-            const result = await connectionCollection.insertOne(req.body)
-            res.send(result)
+            const { partnerId } = req.body
+            const existingConnection = await connectionCollection.findOne({ partnerId: partnerId })
+            if (existingConnection) {
+                res.status(400).send({ message: "Already Connected This Partner", existingConnection })
+            } else {
+                const result = await connectionCollection.insertOne(req.body)
+                res.send(result)
+            }
+
         })
 
         // patch OR put METHOD  Section:
