@@ -38,7 +38,7 @@ const firebaseVerifyToken = async (req, res, next) => {
         next()
     } catch (error) {
         console.log(error);
-        return res.status(401).send({ message: "Token is not authorize1" })
+        return res.status(401).send({ message: "Token is not authorize!" })
     }
 
 }
@@ -159,15 +159,21 @@ async function run() {
             res.send(result)
         })
 
-        app.get("/my-connection", async (req, res) => {
-            const result = await connectionCollection.find({ connectionBy: req.query.email }).toArray()
-            res.send(result)
-        })
-
+        app.get("/my-connection", firebaseVerifyToken, async (req, res) => {
+            const email = req.query.email;
+            if (!email) {
+                return res.status(400).send({ message: "Email query is required" });
+            }
+            if (email !== req.token_email) {
+                return res.status(403).send({ message: "forbidden access try!" });
+            }
+            const result = await connectionCollection.find({ connectionBy: email }).toArray();
+            res.send(result);
+        });
 
 
         // post METHOD  Section:
-        app.post("/partner", async (req, res) => {
+        app.post("/partner", firebaseVerifyToken, async (req, res) => {
             console.log(req.body);
             const result = await partnerCollection.insertOne(req.body)
             res.send(result)
@@ -180,7 +186,8 @@ async function run() {
 
         // patch OR put METHOD  Section:
 
-        app.patch("/partner-count/:id", async (req, res) => {
+        // partner details count update
+        app.patch("/partner-count/:id", firebaseVerifyToken, async (req, res) => {
             const filter = { _id: new ObjectId(req.params.id) }
             const update = { $inc: { partnerCount: 1 } }
             const partnerCount = await partnerCollection.updateOne(filter, update)
@@ -188,10 +195,16 @@ async function run() {
         })
 
         // delete METHOD  Section:
-        app.delete("/partner/:id", async (req, res) => {
-            const result = await partnerCollection.deleteOne({ _id: new ObjectId(req.params.id) })
+        // partner 
+        app.delete("/connection/:id", firebaseVerifyToken, async (req, res) => {
+            const result = await connectionCollection.deleteOne({ _id: new ObjectId(req.params.id) })
             res.send(result)
         })
+
+        // app.delete("/my-connection/:id",async(req,res)=>{
+        //     const result= await connectionCollection.deleteOne({_id:})
+        //     res.send(result)
+        // })
 
         // server run check  Section:
         await client.db("admin").command({ ping: 1 });
