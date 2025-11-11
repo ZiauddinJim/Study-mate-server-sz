@@ -13,7 +13,8 @@ app.use(express.json());
 
 
 // Connect MongoDB
-const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASSWORD}@cluster0.cfeguho.mongodb.net/?appName=Cluster0`;
+// const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASSWORD}@cluster0.cfeguho.mongodb.net/?appName=Cluster0`;
+const uri = "mongodb://localhost:27017"
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
@@ -31,12 +32,13 @@ app.get('/', (req, res) => {
 // MongoDB connection
 async function run() {
     try {
-        // Connect the client to the server	(optional starting in v4.7)
+        // Connect the client to the server	(optional starting in v4.7)  Section:
         await client.connect();
         const db = client.db("StudyMate")
         const partnerCollection = db.collection("partner")
+        const connectionCollection = db.collection("connection")
 
-        // get METHOD
+        // get METHOD  Section:
         app.get("/partner", async (req, res) => {
             const result = await partnerCollection.find().toArray();
             res.send(result)
@@ -125,22 +127,41 @@ async function run() {
             res.send(result)
         })
 
-        // post METHOD
+        app.get("/my-connection", async (req, res) => {
+            const result = await connectionCollection.find({ connectionBy: req.query.email }).toArray()
+            res.send(result)
+        })
+
+
+
+        // post METHOD  Section:
         app.post("/partner", async (req, res) => {
             console.log(req.body);
             const result = await partnerCollection.insertOne(req.body)
             res.send(result)
         })
 
-        // patch OR put METHOD
+        app.post("/connection", async (req, res) => {
+            const result = await connectionCollection.insertOne(req.body)
+            res.send(result)
+        })
 
-        // delete METHOD
+        // patch OR put METHOD  Section:
+
+        app.patch("/partner-count/:id", async (req, res) => {
+            const filter = { _id: new ObjectId(req.params.id) }
+            const update = { $inc: { partnerCount: 1 } }
+            const partnerCount = await partnerCollection.updateOne(filter, update)
+            res.send(partnerCount)
+        })
+
+        // delete METHOD  Section:
         app.delete("/partner/:id", async (req, res) => {
             const result = await partnerCollection.deleteOne({ _id: new ObjectId(req.params.id) })
             res.send(result)
         })
 
-        // server run check
+        // server run check  Section:
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
