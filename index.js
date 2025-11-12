@@ -66,25 +66,26 @@ app.get('/', (req, res) => {
 // MongoDB connection
 async function run() {
     try {
-        // Connect the client to the server	(optional starting in v4.7)  Section:
-        await client.connect();
+        //  Section: Connect the client to the server
+        // await client.connect();
         const db = client.db("StudyMate")
         const partnerCollection = db.collection("partner")
         const connectionCollection = db.collection("connection")
 
-        // get METHOD  Section:
+        //  Section: GET METHOD
+        // Partner api Find partner page
         app.get("/partner", async (req, res) => {
             const result = await partnerCollection.find().toArray();
             res.send(result)
         })
 
-        // Top partner Sort 3 card and rating 
+        // Top partner Sort 4 card and rating api Home page 
         app.get("/top-Partner", async (req, res) => {
             const result = await partnerCollection.find().sort({ rating: -1 }).limit(4).toArray()
             res.send(result)
         })
 
-        // Sort rating
+        // Sort rating Find partner page
         app.get("/rating", async (req, res) => {
             const result = await partnerCollection.find().sort({ rating: -1 }).toArray()
             res.send(result)
@@ -94,7 +95,7 @@ async function run() {
 
         // Note: https://chatgpt.com/share/6911db17-1b24-8013-991d-01b474aff31f
 
-        // Sort Experience low
+        // Sort Experience low Find partner page
         app.get("/experience", async (req, res) => {
             const result = await partnerCollection.aggregate([
                 {
@@ -115,7 +116,7 @@ async function run() {
             res.send(result)
         })
 
-        // Sort Experience high
+        // Sort Experience high Find partner page
         app.get("/experienceHigh", async (req, res) => {
             const result = await partnerCollection.aggregate([{
                 $addFields: {
@@ -135,13 +136,13 @@ async function run() {
             res.send(result)
         })
 
-        // Sort Name
+        // Sort Name Find partner page
         app.get("/name", async (req, res) => {
             const result = await partnerCollection.find().sort({ name: 1 }).toArray()
             res.send(result)
         })
 
-        // Search filter name, location, subject, experience
+        // Search filter name, location, subject, experience Find partner page
         app.get("/search", async (req, res) => {
             const search_text = req.query.search;
             const result = await partnerCollection.find({
@@ -156,12 +157,13 @@ async function run() {
             res.send(result)
         })
 
+        // Partner details api // partner details page
         app.get("/partner/:id", firebaseVerifyToken, async (req, res) => {
-
             const result = await partnerCollection.findOne({ _id: new ObjectId(req.params.id) })
             res.send(result)
         })
 
+        // My-connection api
         app.get("/my-connection", firebaseVerifyToken, async (req, res) => {
             const email = req.query.email;
             if (!email) {
@@ -175,14 +177,16 @@ async function run() {
         });
 
 
-        // post METHOD  Section:
+        //  Section: POST METHOD
+        // Partner data create api
         app.post("/partner", firebaseVerifyToken, async (req, res) => {
             // console.log(req.body);
             const result = await partnerCollection.insertOne(req.body)
             res.send(result)
         })
 
-        app.post("/connection", async (req, res) => {
+        // partner details page my-connection data api
+        app.post("/connection", firebaseVerifyToken, async (req, res) => {
             const { partnerId, connectionBy } = req.body;
 
             // Check if THIS user already connected with THIS partner
@@ -202,9 +206,8 @@ async function run() {
             res.send(result);
         });
 
-        // patch OR put METHOD  Section:
-
-        // partner details count update
+        //  Section: PATCH OR PUT METHOD
+        // partner details count update api
         app.patch("/partner-count/:id", firebaseVerifyToken, async (req, res) => {
             const filter = { _id: new ObjectId(req.params.id) }
             const update = { $inc: { partnerCount: 1 } }
@@ -212,8 +215,8 @@ async function run() {
             res.send(partnerCount)
         })
 
-        // connection partner details update
-        app.patch("/connection/:id", async (req, res) => {
+        // connection partner details update api
+        app.patch("/connection/:id", firebaseVerifyToken, async (req, res) => {
             const filter = { _id: new ObjectId(req.params.id) }
             const productUpdate = req.body
             const update = { $set: productUpdate }
@@ -221,20 +224,15 @@ async function run() {
             res.send(result)
         })
 
-        // delete METHOD  Section:
-        // partner 
+        //  Section: DELETE METHOD
+        // My connection partner delete api
         app.delete("/connection/:id", firebaseVerifyToken, async (req, res) => {
             const result = await connectionCollection.deleteOne({ _id: new ObjectId(req.params.id) })
             res.send(result)
         })
 
-        // app.delete("/my-connection/:id",async(req,res)=>{
-        //     const result= await connectionCollection.deleteOne({_id:})
-        //     res.send(result)
-        // })
-
-        // server run check  Section:
-        await client.db("admin").command({ ping: 1 });
+        //  Section: server run check
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
@@ -244,7 +242,7 @@ async function run() {
 run().catch(console.dir);
 
 
-// app published
+//  Section: app published
 app.listen(port, () => {
     console.log(`Study mate server is running to now port: ${port}`)
 })
