@@ -1,5 +1,5 @@
 node_modules
-.env
 
 firebase-adminSdk.json
 .vercel
+config.bat
