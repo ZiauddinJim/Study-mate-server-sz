@@ -7,7 +7,9 @@ const port = process.env.PORT;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const admin = require("firebase-admin");
 
-const serviceAccount = require("./firebase-adminSdk.json");
+const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString("utf8");
+const serviceAccount = JSON.parse(decoded);
+// const serviceAccount = require("./firebase-adminSdk.json");
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
@@ -45,8 +47,8 @@ const firebaseVerifyToken = async (req, res, next) => {
 
 
 // Connect MongoDB
-// const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASSWORD}@cluster0.cfeguho.mongodb.net/?appName=Cluster0`;
-const uri = "mongodb://localhost:27017"
+const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASSWORD}@cluster0.cfeguho.mongodb.net/?appName=Cluster0`;
+// const uri = "mongodb://localhost:27017"
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
@@ -155,6 +157,7 @@ async function run() {
         })
 
         app.get("/partner/:id", firebaseVerifyToken, async (req, res) => {
+
             const result = await partnerCollection.findOne({ _id: new ObjectId(req.params.id) })
             res.send(result)
         })
@@ -180,16 +183,24 @@ async function run() {
         })
 
         app.post("/connection", async (req, res) => {
-            const { partnerId } = req.body
-            const existingConnection = await connectionCollection.findOne({ partnerId: partnerId })
-            if (existingConnection) {
-                res.status(400).send({ message: "Already Connected This Partner", existingConnection })
-            } else {
-                const result = await connectionCollection.insertOne(req.body)
-                res.send(result)
+            const { partnerId, connectionBy } = req.body;
+
+            // Check if THIS user already connected with THIS partner
+            const userAlreadyConnected = await connectionCollection.findOne({
+                partnerId: partnerId,
+                connectionBy: connectionBy
+            });
+
+            if (userAlreadyConnected) {
+                return res.status(400).send({
+                    message: "You have already connected with this partner",
+                    existingConnection: userAlreadyConnected
+                });
             }
 
-        })
+            const result = await connectionCollection.insertOne(req.body);
+            res.send(result);
+        });
 
         // patch OR put METHOD  Section:
 
